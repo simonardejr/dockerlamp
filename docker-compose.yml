@@ -1,0 +1,49 @@
+version: "3"
+
+services:
+  webserver:
+    build: 
+      context: ./lamp-src/dockerfiles/webserver
+    container_name: 'lod-webserver'
+    restart: 'always'
+    ports:
+      - "8000:80"
+      - "4443:443"
+    links: 
+      - mariadb
+    volumes: 
+      - ./public:/var/www/html
+      - ./lamp-src/config/php/php.ini:/usr/local/etc/php/php.ini
+      - ./lamp-src/config/vhosts:/etc/apache2/sites-enabled
+      - ./lamp-src/logs/apache2:/var/log/apache2
+  mariadb:
+    build: ./lamp-src/dockerfiles/mariadb
+    container_name: 'lod-mysql'
+    restart: 'always'
+    ports:
+      - "3306:3306"
+    volumes: 
+      - ./lamp-src/data/mysql:/var/lib/mysql
+      - ./lamp-src/logs/mysql:/var/log/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 5agF56XX30101
+      MYSQL_DATABASE: docker
+      MYSQL_USER: docker
+      MYSQL_PASSWORD: docker
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: 'lod-phpmyadmin'
+    links:
+      - mariadb
+    environment:
+      PMA_HOST: mariadb
+      PMA_PORT: 3306
+    ports:
+      - '8080:80'
+    volumes: 
+      - /sessions
+  redis:
+    container_name: 'lod-redis'
+    image: redis:latest
+    ports:
+      - "6379:6379"
